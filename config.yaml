@@ -1,0 +1,5 @@
+port: 8080
+db:
+  dialect: postgres
+  username: postgres
+  password: password
