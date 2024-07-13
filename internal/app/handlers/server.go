@@ -7,7 +7,8 @@ import (
 )
 
 type AppServer struct {
-	Port uint
+	Port          uint
+	AccountServer app.ServerConfig
 }
 
 func (appServer *AppServer) ListenAndServe() error {
@@ -24,7 +25,7 @@ func NewAppServer(cfg *app.Config) (*AppServer, error) {
 		return &AppServer{}, nil
 	}
 	buildRoutingTable()
-	return &AppServer{Port: cfg.Port}, nil
+	return &AppServer{Port: cfg.Port, AccountServer: cfg.Server}, nil
 }
 
 func buildRoutingTable() {

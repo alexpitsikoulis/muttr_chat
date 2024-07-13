@@ -1,14 +1,15 @@
 package app
 
 import (
-	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	Port uint     `yaml:"port"`
-	DB   DBConfig `yaml:"db"`
+	Port   uint         `yaml:"port"`
+	DB     DBConfig     `yaml:"db"`
+	Server ServerConfig `yaml:"server"`
 }
 
 type DBConfig struct {
@@ -17,12 +18,17 @@ type DBConfig struct {
 	Password string `yaml:"password"`
 }
 
+type ServerConfig struct {
+	Host string `yaml:"host"`
+	Port uint   `yaml:"port"`
+}
+
 func NewConfig(filePath string) (*Config, error) {
 	var cfg Config
-	cfgFile, err := ioutil.ReadFile(filePath)
+	cfgFile, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 	err = yaml.Unmarshal(cfgFile, &cfg)
-	return &cfg, nil
+	return &cfg, err
 }
