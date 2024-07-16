@@ -1,11 +1,5 @@
-DROP TABLE IF EXISTS dm_threads;
-DROP TABLE IF EXISTS direct_messages;
-DROP TABLE IF EXISTS server_threads;
-DROP TABLE IF EXISTS server_messages;
-DROP TABLE IF EXISTS server_message_reads;
-DROP TABLE IF EXISTS server_message_reactions;
-DROP TABLE IF EXISTS group_chats;
-DROP TABLE IF EXISTS group_chat_members;
-DROP TABLE IF EXISTS group_chat_messages;
-DROP TABLE IF EXISTS group_chat_message_reads;
-DROP TABLE IF EXISTS group_chat_message_reactions;
+DROP TABLE IF EXISTS reactions;
+DROP TABLE IF EXISTS reads;
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS thread_users;
+DROP TABLE IF EXISTS threads;

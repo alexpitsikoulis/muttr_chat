@@ -1,105 +1,58 @@
-CREATE TABLE IF NOT EXISTS dm_threads(
-	id uuid NOT NULL,
-	PRIMARY KEY(id),
-	first_user_id uuid NOT NULL,
-	second_user_id uuid NOT NULL,
-	created_at timestamptz NOT NULL DEFAULT now(),
-	updated_at timestamptz NOT NULL DEFAULT now(),
-	deleted_at timestamptz,
-	CHECK (first_user_id < second_user_id)
-);
+DO $$
+BEGIN
+	IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'thread_t') THEN
+		CREATE TYPE thread_t AS ENUM ('direct_message', 'server_thread', 'group_message');
+	END IF;
+END $$;
 
-CREATE TABLE IF NOT EXISTS direct_messages(
-	id uuid NOT NULL,
-	PRIMARY KEY(id),
-	thread_id uuid NOT NULL REFERENCES dm_threads(id),
-	sender_id uuid NOT NULL,
-	message VARCHAR(2000) NOT NULL,
-	is_read BOOLEAN DEFAULT false,
-	reaction VARCHAR(4),
-	created_at timestamptz NOT NULL DEFAULT now(),
-	updated_at timestamptz NOT NULL DEFAULT now(),
-	deleted_at timestamptz
-);
+DO $$
+BEGIN
+	IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'role') THEN
+		CREATE TYPE role AS ENUM ('user', 'moderator', 'admin');
+	END IF;
+END $$;
 
-CREATE TABLE IF NOT EXISTS server_threads(
+
+CREATE TABLE IF NOT EXISTS threads(
 	id uuid NOT NULL,
+	thread_type thread_t NOT NULL,
 	PRIMARY KEY(id),
-	server_id uuid NOT NULL,
+	server_id uuid,
 	name VARCHAR(50),
-	voice_enabled BOOLEAN DEFAULT true,
+	voice_enabled BOOLEAN,
 	created_at timestamptz NOT NULL DEFAULT now(),
 	updated_at timestamptz NOT NULL DEFAULT now(),
 	deleted_at timestamptz
 );
 
-CREATE TABLE IF NOT EXISTS server_messages(
+
+CREATE TABLE IF NOT EXISTS thread_users(
+	thread_id uuid NOT NULL REFERENCES threads(id),
+	user_id uuid NOT NULL,
+	PRIMARY KEY(thread_id, user_id),
+	user_role role NOT NULL DEFAULT 'user'
+);
+
+CREATE TABLE IF NOT EXISTS messages(
 	id uuid NOT NULL,
 	PRIMARY KEY(id),
-	thread_id uuid NOT NULL REFERENCES server_threads(id),
+	thread_id uuid NOT NULL REFERENCES threads(id),
 	sender_id uuid NOT NULL,
-	message VARCHAR(2000) NOT NULL,
+	message VARCHAR(256),
 	created_at timestamptz NOT NULL DEFAULT now(),
 	updated_at timestamptz NOT NULL DEFAULT now(),
 	deleted_at timestamptz
 );
 
-CREATE TABLE IF NOT EXISTS server_message_reads(
-	message_id uuid NOT NULL REFERENCES server_messages(id),
+CREATE TABLE IF NOT EXISTS reactions(
+	message_id uuid NOT NULL REFERENCES messages(id),
 	user_id uuid NOT NULL,
 	PRIMARY KEY(message_id, user_id),
-	created_at timestamptz NOT NULL DEFAULT now(),
-	updated_at timestamptz NOT NULL DEFAULT now(),
-	deleted_at timestamptz
+	reaction VARCHAR(4)
 );
 
-CREATE TABLE IF NOT EXISTS server_message_reactions(
-	message_id uuid NOT NULL REFERENCES server_messages(id),
+CREATE TABLE IF NOT EXISTS reads(
+	message_id uuid NOT NULL REFERENCES messages(id),
 	user_id uuid NOT NULL,
-	PRIMARY KEY(message_id, user_id),
-	reaction VARCHAR(4) NOT NULL,
-	created_at timestamptz NOT NULL DEFAULT now(),
-	updated_at timestamptz NOT NULL DEFAULT now(),
-	deleted_at timestamptz
-);
-
-CREATE TABLE IF NOT EXISTS group_chats(
-	id uuid,
-	PRIMARY KEY(id)
-);
-
-CREATE TABLE IF NOT EXISTS group_chat_members(
-	group_chat_id uuid NOT NULL REFERENCES group_chats(id),
-	user_id uuid NOT NULL,
-	PRIMARY KEY(group_chat_id, user_id)
-);
-
-CREATE TABLE IF NOT EXISTS group_chat_messages(
-	id uuid NOT NULL,
-	PRIMARY KEY(id),
-	group_chat_id uuid NOT NULL REFERENCES group_chats(id),
-	sender_id uuid NOT NULL,
-	message VARCHAR(2000) NOT NULL,
-	created_at timestamptz NOT NULL DEFAULT now(),
-	updated_at timestamptz NOT NULL DEFAULT now(),
-	deleted_at timestamptz
-);
-
-CREATE TABLE IF NOT EXISTS group_chat_message_reads(
-	message_id uuid NOT NULL REFERENCES group_chat_messages(id),
-	user_id uuid NOT NULL,
-	PRIMARY KEY(message_id, user_id),
-	created_at timestamptz NOT NULL DEFAULT now(),
-	updated_at timestamptz NOT NULL DEFAULT now(),
-	deleted_at timestamptz
-);
-
-CREATE TABLE IF NOT EXISTS group_chat_message_reactions(
-	message_id uuid NOT NULL REFERENCES group_chat_messages(id),
-	user_id uuid NOT NULL,
-	PRIMARY KEY(message_id, user_id),
-	reaction VARCHAR(4) NOT NULL,
-	created_at timestamptz NOT NULL DEFAULT now(),
-	updated_at timestamptz NOT NULL DEFAULT now(),
-	deleted_at timestamptz
+	PRIMARY KEY(message_id, user_id)
 );
